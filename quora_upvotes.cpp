@@ -1,3 +1,8 @@
+/*
+given a list of upvotes of posts,
+count the non-increasing - non-decreasing 
+during a window period
+*/
 #include <cmath>
 #include <cstdio>
 #include <vector>

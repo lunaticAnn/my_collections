@@ -107,7 +107,7 @@ using namespace std;
                         to_visit.insert(nbs[i]);
                     frontier.push(nbs[i]);
                     
-                }//update not visit nodes
+                }//update non-visit nodes
             }           
             
         }
@@ -154,8 +154,6 @@ int main(){
         for(size_t j =0; j < n; j++){
             cin>>forest[i][j];
     }
-    vec2Int startp = vec2Int(5, 5);
-    vec2Int endp = vec2Int(1, 1);
     cout<<cutOffTree(forest);
     return 0;
 }
