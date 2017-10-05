@@ -193,9 +193,7 @@ public class ColorCube : MonoBehaviour {
                 update_pos_cubelines();
             yield return new WaitForEndOfFrame();
         }
-<<<<<<< HEAD
             
-
         Debug.Log("Initialize finished.");
 
         //create lines here
@@ -205,9 +203,6 @@ public class ColorCube : MonoBehaviour {
     IEnumerator slightly_movement() {
         int i, j, k;
         while (true){
-=======
-			
-
 		Debug.Log("Initialize finished.");
 
 		//create lines here
@@ -238,9 +233,7 @@ public class ColorCube : MonoBehaviour {
 	//++++++++++++++++++++++++++++++ spring mass system +++++++++++++++++++++++++++++++++++++++
 	IEnumerator realistic_movement() {	
 		int i, j, k;
-		while (true)
-		{
->>>>>>> origin/master
+		while (true){
             int current_alive = _par.GetParticles(pars);
             if (current_alive != vertice_cnt)
             {
