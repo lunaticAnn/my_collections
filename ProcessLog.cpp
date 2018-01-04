@@ -1,10 +1,10 @@
 /*==================================================
-process identified by starting time
-detailed result in:
-result/HOUR_MINUTE_SECOND_PID
+process identified by starting time and pid
+warning details in:
+detail_logs/HOUR_MINUTE_SECOND_PID
 =====================================================*/
 //#define __DEBUG_DETAILS__ 
-
+#define _CRT_SECURE_NO_WARNINGS
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fstream>
@@ -17,7 +17,7 @@ result/HOUR_MINUTE_SECOND_PID
 long long THRESHOLD = 100000;
 float THRESHOLD_TIME = 60.;
 const char* helper = 
-"usage: process [LogFile] [-t time_threshold] [-m memory_threshold]\n";
+"usage: process [LogFile] [-t time_threshold(s)] [-m memory_threshold(kb)]\n";
 struct proc{
     int progress;
     int hour;
@@ -49,25 +49,43 @@ struct proc{
     ~proc(){}
 
     int log_proc(float time_lapse){
-        if(vm_use > THRESHOLD || rss_use > THRESHOLD || time_lapse > THRESHOLD_TIME){
+        if(vm_use > THRESHOLD || rss_use > THRESHOLD || 
+           time_lapse > THRESHOLD_TIME||time_lapse < 0){
             std::string file_name = std::to_string(hour) + "_"
                                  + std::to_string(min) + "_"
                                  + std::to_string(sec) + "_"
                                  + std::to_string(pid) + ".txt";
-            std::ofstream ofs("result/" + file_name);
+            std::ofstream ofs_warn;
+            ofs_warn.open ("warning.log", std::ofstream::out | std::ofstream::app);
             if(vm_use > THRESHOLD || rss_use > THRESHOLD){ 
-                printf("[Warning] High Memory Usage. \n");
+                std::ofstream ofs("detail_logs/[Memory]" + file_name);
+                ofs_warn << "[Warning] High Memory Usage."
+                <<"["<<pid<<"]"<<query<<"\n";
                 ofs << "[Warning] High Memory Usage. \n";
                 ofs << "vm usage:" << vm_use << "\n";
                 ofs << "vm usage:" << vm_use << "\n";
+                ofs << whole_process;
+                ofs.close();             
             }
             if(time_lapse > THRESHOLD_TIME){
-                printf("[Warning] Long Query Time.\n");
+                std::ofstream ofs("detail_logs/[Time]" + file_name);
+                ofs_warn << "[Warning] Long Query Time."
+                <<"["<<pid<<"]"<<query<<"\n";
                 ofs << "[Warning] Long Query Time. \n";
                 ofs << "Timelapse:" << time_lapse << "\n";
+                ofs << whole_process;
+                ofs.close();
             }
-            ofs << whole_process;
-            ofs.close();           
+            if(time_lapse < 0){
+                std::ofstream ofs("detail_logs/[NotFin]" + file_name);
+                ofs_warn << "[Warning] Process Not Finished."
+                <<"["<<pid<<"]"<<query<<"\n";
+                ofs << "[Warning] Process was not finished. \n";
+                ofs << whole_process;
+                ofs.close();
+            }
+            ofs_warn.close();
+                       
         }
         return 0;
     } 
@@ -126,8 +144,8 @@ int process_log(std::string& str, std::unordered_map<int, proc*>* process_list){
         
          //check if pid in the process list
         auto it = process_list -> find(pid);
-        if(it != process_list->end()){            
-            it -> second -> whole_process += str + "\n";
+        if(it != process_list->end()){ 
+            it -> second -> whole_process += str + "\n";           
             it -> second -> vm_use += vm_alloc;
             it -> second -> rss_use += rss_alloc; 
         }
@@ -145,8 +163,9 @@ int process_log(std::string& str, std::unordered_map<int, proc*>* process_list){
             printf("--->rss size: [%lld]\n", rss_s); 
         #endif 
 
-        if(progress == 34){
-            if(it != process_list->end()){
+        
+        if(it != process_list->end()){
+            if(progress == 34){
                 long long mem_change_vm = vm_s - it -> second -> vm_size_s;
                 long long mem_change_rss = rss_s - it -> second -> rss_size_s;
                 printf("Process [%d]: %s \nStarted from [%02d:%02d:%f]\n", 
@@ -167,10 +186,15 @@ int process_log(std::string& str, std::unordered_map<int, proc*>* process_list){
                 it -> second -> log_proc(time_lapse); 
                 delete it->second;
                 process_list -> erase(it);                    
+            }
+            if(progress == 1){
+                it -> second -> log_proc(-1.); 
+                delete it->second;
+                process_list -> erase(it);   
             }        
         }
         
-        else if(it == process_list -> end()){
+        if(it == process_list -> end()||progress == 1){
             proc* p = new proc(progress, h, 
                                 m, s,
                                 vm_s,
@@ -179,7 +203,7 @@ int process_log(std::string& str, std::unordered_map<int, proc*>* process_list){
             p -> whole_process = str + "\n";
             p -> vm_use = vm_alloc;
             p -> rss_use = rss_alloc;
-            process_list -> insert(std::make_pair(pid, p));   
+            process_list -> insert(std::make_pair(pid, p));  
         } 
                        
     }
@@ -212,6 +236,11 @@ int main(int argc, char* argv[]){
         printf("%s", helper);
         return 0;
     }    
+    if(argv[1][0] == '-' && argv[1][1]=='h'){
+        printf("%s", helper);
+        return 0;
+    }
+
     
     std::ifstream file(argv[1]);
     std::string str;
@@ -248,28 +277,42 @@ int main(int argc, char* argv[]){
     printf ("Start evaluating [%s]\n", argv[1]);
     printf ("Memory threshold %lld...\n", THRESHOLD);
     printf ("Time threshold %f...\n", THRESHOLD_TIME);
-    printf ("Saving to analysis.log\n");
+    printf ("Saving to warning.log\n");
 
     if (system(NULL)) puts ("Ok");
         else exit (EXIT_FAILURE);
+
     struct stat info;
-    if(stat( "result", &info) != 0){
-        system("mkdir result");
+    if(stat( "warning.log", &info) == 0){
+		#ifdef _WIN32
+			system("del warning.log");
+
+		#elif __linux__
+			system("rm warning.log");
+		#endif
+        
+    }
+    if(stat( "detail_logs", &info) != 0){
+        system("mkdir detail_logs");
     }
     else if(!(info.st_mode & S_IFDIR)){
-        system("mkdir result");
+        system("mkdir detail_logs");
     }
     else{
-        system("rm result/*");
+	#ifdef _WIN32
+        system("del detail_logs");
+	
+	#elif __linux__
+		system("rm detail_logs/*");
+	#endif
     }
     
-    freopen("analysis.log", "w" ,stdout);
+    freopen("process_list.log", "w" ,stdout);
        
     std::unordered_map<int, proc*> process_list;
     while(std::getline(file, str)){
         process_log(str, &process_list);        
     }
-    printf("%lu\n",process_list.size());
-    //log unfinished ones
     
 }
+
