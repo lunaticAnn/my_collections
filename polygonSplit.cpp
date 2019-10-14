@@ -150,36 +150,36 @@ struct DirectedConvexPolygon {
 			if (intersect(ray, e, &intersection))
 			{
 			// should have a threshold to generate new vertex data
-			if (intersection.t < 1e-4)
-			{
-				sp0 = sp0 == nullptr ? e->p1 : sp0;
-						sp1 = sp0 == e->p1 ? sp1 : e->p1;
-			}
-			else if (1 - intersection.t < 1e-4)
-			{
-				sp0 = sp0 == nullptr ? e->p0 : sp0;
-				sp1 = sp0 == e->p0 ? sp1 : e->p0;
-			}
-			else
-			{
-				// generate new vertex and 2 edges, adjusting the polygon mesh
-				vertexData->emplace_back(intersection.p.x, intersection.p.y);
-				UIVertex* newVertex;
-				if (sp0 == nullptr)
-				{	
-					sp0 = &vertexData->back();
-					newVertex = sp0;
+				if (intersection.t < 1e-4)
+				{
+					sp0 = sp0 == nullptr ? e->p1 : sp0;
+							sp1 = sp0 == e->p1 ? sp1 : e->p1;
+				}
+				else if (1 - intersection.t < 1e-4)
+				{
+					sp0 = sp0 == nullptr ? e->p0 : sp0;
+					sp1 = sp0 == e->p0 ? sp1 : e->p0;
 				}
 				else
 				{
-					sp1 = &vertexData->back();
-					newVertex = sp1;
-				}
+					// generate new vertex and 2 edges, adjusting the polygon mesh
+					vertexData->emplace_back(intersection.p.x, intersection.p.y);
+					UIVertex* newVertex;
+					if (sp0 == nullptr)
+					{	
+						sp0 = &vertexData->back();
+						newVertex = sp0;
+					}
+					else
+					{
+						sp1 = &vertexData->back();
+						newVertex = sp1;
+					}
 
-				Edge* newEdge = new Edge(newVertex, e->p1);
-				newEdge->nextEdge = e->nextEdge;
-				e->p1 = newVertex;
-				e->nextEdge = newEdge;
+					Edge* newEdge = new Edge(newVertex, e->p1);
+					newEdge->nextEdge = e->nextEdge;
+					e->p1 = newVertex;
+					e->nextEdge = newEdge;
 				}
 			}
 			e = next;
@@ -230,5 +230,5 @@ int main()
 	poly.split(ray, &other);
 	poly.iteratePrint();
 	other.iteratePrint();
-    return 0;
+	return 0;
 }
