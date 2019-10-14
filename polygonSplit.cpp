@@ -158,7 +158,7 @@ struct DirectedConvexPolygon {
             	else if (1 - intersection.t < 1e-4)
             	{
                 	sp0 = sp0 == nullptr ? e->p0 : sp0;
-                    sp1 = sp0 == e->p0 ? sp1 : e->p0;
+                	sp1 = sp0 == e->p0 ? sp1 : e->p0;
             	}
             	else
             	{
@@ -180,8 +180,8 @@ struct DirectedConvexPolygon {
                 	newEdge->nextEdge = e->nextEdge;
                 	e->p1 = newVertex;
                 	e->nextEdge = newEdge;
-            	}
-        	}
+				}
+			}
 			e = next;
 		}
 
