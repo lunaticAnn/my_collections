@@ -28,8 +28,19 @@
  -100 ≤ Y ≤ 100.
  Test set 3 (Visible Verdict)
  1 ≤ T ≤ 100.
- -109 ≤ X ≤ 109.
- -109 ≤ Y ≤ 109.
+ -1e9 ≤ X ≤ 1e9.
+ -1e9 ≤ Y ≤ 1e9.
+ 
+ Notes:
+ I think mine method should be super fast.°˖✧◝(⁰▿⁰)◜✧˖°
+ while it took me long to figure out the bounds for larger cases.
+ The idea is that you can
+ 1. eliminate impossible ones with even manhattan distance.
+ 2. e.g. we have (2, 7) as target, with manhattan distance 9, we know that you need to use (1, 2, 4, 8) to form 2 and 7.
+ 3. with diff of ((1 + 2 + 4 + 8) - 9) / 2 = 3, which is (0x11F), we know that 1, 2 are negative.
+ 4. so we know that we want to form (2, 7) with set (-1, -2, 4, 8)
+ 5. starting from the MSB, if bit is positive, assign it to the larger number, otherwise the smaller.
+ 6. there should be other optimizations but I am too lazy to do that.(e.g. There is no extra need for recording xSteps, but just direct output in the previous loop.)
  */
 
 #include <iostream>
